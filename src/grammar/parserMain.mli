@@ -7,18 +7,17 @@ val parse_lexbuf :
   ('a -> 'b) ->
   'b
 (** [parse_lexbuf ~entry ~literate lexbuf k] parses the lexbuf content
-    representing a Niagara AST piece [p], produced by [entry], and
-    returns [k p].
+    representing a Niagara AST piece [p], produced by [entry], and returns
+    [k p].
 
     @param literate
-      If [lexbuf]'s content is composed with Mardown's blocks,
-      compiles only (and all) {v niagara v} code blocks, ignoring
-      other content.*)
+      If [lexbuf]'s content is composed with Mardown's blocks, compiles only
+      (and all) 'niagara' code blocks, ignoring other content.*)
 
 val parse_program : string -> Ast.source Ast.program
-(** [parse_program path] parses the file at [path] and returns the
-    corresponding Niagara program. If the filename ends with {v .nga v}, it
-    treated as a Niagara source file or a Markdown text file if not.
+(** [parse_program path] parses the file at [path] and returns the corresponding
+    Niagara program. If the filename ends with '.nga', it treated as a Niagara
+    source file or a Markdown text file if not.
 
     See {!parse_lexbuf} *)
 
