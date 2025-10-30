@@ -32,7 +32,7 @@ type info = private {
 
 (** Meta data tag for additionnal messages.loc
 
-    @warning They are stored in reverse order. *)
+    {b Warning} They are stored in reverse order. *)
 val infos_tag : info Tag.def
 
 val raise_internal_error :
@@ -60,7 +60,7 @@ val raise_multiple_opp_provider_error : ?locs:Pos.t list -> ProgramInfo.t -> Var
     standard output/error. For CLI use. *)
 val cli_reporting_init : unit -> unit
 
-(** {1. Legacy} *)
+(** {1 Legacy} *)
 
 (** Legacy function to report errors.
 
