@@ -6,95 +6,82 @@ let print_var_info infos fmt (v : Variable.t) =
   VarInfo.print fmt i
 
 let print_var_with_info infos fmt (v : Variable.t) =
-  Format.fprintf fmt "%d/%a"
-    (Variable.uid v)
-    (print_var_info infos) v
+  Format.fprintf fmt "%d/%a" (Variable.uid v) (print_var_info infos) v
 
 let rec print_expr fmt (e : expr) =
   match e with
-   | EVar v -> fprintf fmt "v%d" (Variable.uid v)
-   | EPre v -> fprintf fmt "pre(v%d)" (Variable.uid v)
-   | ENot e -> fprintf fmt "!%a" print_expr e
-   | EAnd (e1, e2) ->
-     fprintf fmt "@[<hov 2>(%a@ && %a@])"
-       print_expr e1 print_expr e2
-   | EGe (e1, e2) ->
-     fprintf fmt "@[<hov 2>(%a@ >= %a@])"
-       print_expr e1 print_expr e2
-   | EConst l -> Literal.print fmt l
-   | ENeg e -> fprintf fmt "(- %a)" print_expr e
-   | EInv e -> fprintf fmt "(1 / %a)" print_expr e
-   | EAdd (e1, ENeg e2) ->
-     fprintf fmt "@[<hov 2>(%a@ - %a@])"
-       print_expr e1 print_expr e2
-   | EMult (e1, EInv e2) ->
-     fprintf fmt "@[<hov 2>(%a@ / %a@])"
-       print_expr e1 print_expr e2
-   | EAdd (e1, e2) ->
-     fprintf fmt "@[<hov 2>(%a@ + %a@])"
-       print_expr e1 print_expr e2
-   | EMult (e1, e2) ->
-     fprintf fmt "@[<hov 2>(%a@ * %a@])"
-       print_expr e1 print_expr e2
+  | EVar v -> fprintf fmt "v%d" (Variable.uid v)
+  | EPre v -> fprintf fmt "pre(v%d)" (Variable.uid v)
+  | ENot e -> fprintf fmt "!%a" print_expr e
+  | EAnd (e1, e2) ->
+      fprintf fmt "@[<hov 2>(%a@ && %a@])" print_expr e1 print_expr e2
+  | EGe (e1, e2) ->
+      fprintf fmt "@[<hov 2>(%a@ >= %a@])" print_expr e1 print_expr e2
+  | EConst l -> Literal.print fmt l
+  | ENeg e -> fprintf fmt "(- %a)" print_expr e
+  | EInv e -> fprintf fmt "(1 / %a)" print_expr e
+  | EAdd (e1, ENeg e2) ->
+      fprintf fmt "@[<hov 2>(%a@ - %a@])" print_expr e1 print_expr e2
+  | EMult (e1, EInv e2) ->
+      fprintf fmt "@[<hov 2>(%a@ / %a@])" print_expr e1 print_expr e2
+  | EAdd (e1, e2) ->
+      fprintf fmt "@[<hov 2>(%a@ + %a@])" print_expr e1 print_expr e2
+  | EMult (e1, e2) ->
+      fprintf fmt "@[<hov 2>(%a@ * %a@])" print_expr e1 print_expr e2
   | EMerge vs ->
-    fprintf fmt "@[<hov 2>merge(%a@])"
-      (pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt ",@ ")
-         (fun fmt v -> pp_print_int fmt (Variable.uid v)))
-      vs
+      fprintf fmt "@[<hov 2>merge(%a@])"
+        (pp_print_list
+           ~pp_sep:(fun fmt () -> fprintf fmt ",@ ")
+           (fun fmt v -> pp_print_int fmt (Variable.uid v)))
+        vs
 
 let print_aggregated_vars fmt (vars : (Variable.t * Condition.t) list) =
-  Format.pp_print_list ~pp_sep:(fun fmt () -> Format.fprintf fmt ",@ ")
+  Format.pp_print_list
+    ~pp_sep:(fun fmt () -> Format.fprintf fmt ",@ ")
     (fun fmt (var, cond) ->
-       Format.fprintf fmt "v%d{%a}" (Variable.uid var) Condition.print cond)
+      Format.fprintf fmt "v%d{%a}" (Variable.uid var) Condition.print cond)
     fmt vars
 
 let print_aggregation infos fmt (var : Variable.t) (aggr : aggregation) =
-  fprintf fmt "@[<hov 2>%a"
-    (print_var_with_info infos) var;
+  fprintf fmt "@[<hov 2>%a" (print_var_with_info infos) var;
   match aggr with
   | One ge ->
-    fprintf fmt " ={%a}@ %a@]"
-      Condition.print ge.eq_act
-      print_expr ge.eq_expr
-  | More vars ->
-    fprintf fmt " = [@ %a@ @]]" print_aggregated_vars vars
+      fprintf fmt " ={%a}@ %a@]" Condition.print ge.eq_act print_expr ge.eq_expr
+  | More vars -> fprintf fmt " = [@ %a@ @]]" print_aggregated_vars vars
 
 let print_eq infos fmt (var : Variable.t) (ge : guarded_eq option) =
-  fprintf fmt "@[<hov 2>%a"
-    (print_var_with_info infos) var;
+  fprintf fmt "@[<hov 2>%a" (print_var_with_info infos) var;
   match ge with
   | Some ge ->
-    fprintf fmt " ={%a}@ %a@]"
-      Condition.print ge.eq_act
-      print_expr ge.eq_expr
+      fprintf fmt " ={%a}@ %a@]" Condition.print ge.eq_act print_expr ge.eq_expr
   | None -> fprintf fmt " : no equation@]"
 
 let print_eqs infos fmt (p : program) =
   fprintf fmt "@[<v 2>Equations:@;";
   pp_print_list ~pp_sep:pp_print_cut
     (fun fmt v -> print_eq infos fmt v (Variable.Map.find_opt v p.val_eqs))
-    fmt (Array.to_list p.val_order);
+    fmt
+    (Array.to_list p.val_order);
   fprintf fmt "@;@]@."
 
 let print_inputs fmt (p : program) =
   fprintf fmt "@[<v 2>Inputs:@;";
   Variable.Map.iter
     (fun v i ->
-       match i.VarInfo.kind with
-       | ParameterInput { shadow = false }
-       | PoolInput { shadow = false } ->
-         print_eq p.infos fmt v (Variable.Map.find_opt v p.val_eqs);
-         pp_print_cut fmt ()
-       | _ -> ())
+      match i.VarInfo.kind with
+      | ParameterInput { shadow = false } | PoolInput { shadow = false } ->
+          print_eq p.infos fmt v (Variable.Map.find_opt v p.val_eqs);
+          pp_print_cut fmt ()
+      | _ -> ())
     p.infos.ProgramInfo.var_info;
   fprintf fmt "@]@."
 
 let print_events fmt (p : program) =
   fprintf fmt "@[<v 2>Events:@;";
   pp_print_list ~pp_sep:pp_print_cut
-    (fun fmt v ->
-       print_eq p.infos fmt v (Variable.Map.find_opt v p.act_eqs))
-    fmt (Array.to_list p.act_order);
+    (fun fmt v -> print_eq p.infos fmt v (Variable.Map.find_opt v p.act_eqs))
+    fmt
+    (Array.to_list p.act_order);
   fprintf fmt "@]@."
 
 let print_program fmt (p : program) =
@@ -109,26 +96,23 @@ let print_edge fmt (e : edge_way) =
   | Falling -> pp_print_string fmt "falling"
 
 let print_static_threshold fmt (thres : static_threshold) =
-  fprintf fmt "@[<hov 2>%a on i%d {%a}@ %a@]"
-    print_edge thres.edge
-    (Variable.uid thres.var)
-    Condition.print thres.value.eq_act
-    print_expr thres.value.eq_expr
+  fprintf fmt "@[<hov 2>%a on i%d {%a}@ %a@]" print_edge thres.edge
+    (Variable.uid thres.var) Condition.print thres.value.eq_act print_expr
+    thres.value.eq_expr
 
 let print_threshold fmt (thres : threshold) =
   match thres with
   | Static static_thres ->
-    pp_print_list ~pp_sep:pp_print_cut print_static_threshold fmt static_thres
+      pp_print_list ~pp_sep:pp_print_cut print_static_threshold fmt static_thres
   | Dynamic -> pp_print_string fmt "dynamic"
 
 let print_evt_limits fmt evt (ls : threshold) =
-  fprintf fmt "@[<hov 2>event %d:@ %a@,@]"
-    (Variable.uid evt)
-    print_threshold ls
+  fprintf fmt "@[<hov 2>event %d:@ %a@,@]" (Variable.uid evt) print_threshold ls
 
 let print_limits fmt (limits : limits) =
   fprintf fmt "@[<v 2>Limits:@;";
-  Variable.Map.iter (fun e ls ->
+  Variable.Map.iter
+    (fun e ls ->
       print_evt_limits fmt e ls;
       pp_print_cut fmt ())
     limits;

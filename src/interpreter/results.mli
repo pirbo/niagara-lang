@@ -9,8 +9,7 @@ type item_result_layout = {
   (* destination -> staged value -> value mapping of repartition *)
   defaults : Variable.t Variable.Map.t Variable.Map.t;
   (* destination -> staged value -> value mapping of default repartition *)
-  computed : Variable.Set.t
-  (* computation of item value *)
+  computed : Variable.Set.t; (* computation of item value *)
 }
 
 type flat_item = {
@@ -23,8 +22,7 @@ type flat_item = {
 type super_item_layout = {
   super_item : item_result_layout;
   (* aggregation values item *)
-  super_detail_items : Variable.Set.t;
-  (* detail lines items *)
+  super_detail_items : Variable.Set.t; (* detail lines items *)
 }
 
 type top_item =
@@ -35,15 +33,17 @@ type top_item =
   | Detail of item_result_layout
   (* aggregation details, not to be displayed at toplevel *)
   | Flat of flat_item
-  (* triggered value item *)
+(* triggered value item *)
 
 type results_layout = top_item Variable.Map.t
 
 type line_squashing =
-  | MeldInNext  (* Whole line is absorbed into the next displayed
+  | MeldInNext
+    (* Whole line is absorbed into the next displayed
                    line, defaulting to the very last one *)
   | SquashSteps (* Keep the line, but merge all steps *)
-  | AllSteps (* Keep everything relevant *)
+  | AllSteps
+(* Keep everything relevant *)
 (* Define squashing behavior for an output line *)
 
 type norm_mode =
@@ -59,7 +59,6 @@ type norm_mode =
 (* Normalization form for computation valuations and result layout *)
 
 val build_result_layout : ProgramInfo.t -> results_layout
-
 val sort_layout : graph:Variable.Graph.t -> results_layout -> top_item list
 
 val iter_layout :
@@ -67,19 +66,19 @@ val iter_layout :
 (* iter on result items in a predefined order *)
 
 val force_step_merge :
-  ProgramInfo.t
-  -> filter:(Variable.t -> bool)
-  -> Execution.output_step
-  -> Execution.output_step
-  -> Execution.output_step
+  ProgramInfo.t ->
+  filter:(Variable.t -> bool) ->
+  Execution.output_step ->
+  Execution.output_step ->
+  Execution.output_step
 
 val normalize_valuations :
-  ProgramInfo.t
-  -> norm_mode
-  -> Execution.computation_outputs
-  -> Execution.computation_outputs
+  ProgramInfo.t ->
+  norm_mode ->
+  Execution.computation_outputs ->
+  Execution.computation_outputs
 (* filter variables and squash steps following the given normalization mode *)
 
 val normalize_layout :
-  ProgramInfo.t -> norm_mode -> results_layout  -> results_layout
+  ProgramInfo.t -> norm_mode -> results_layout -> results_layout
 (* filter items and sub-items following the given normalization mode *)

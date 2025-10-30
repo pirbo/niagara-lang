@@ -20,38 +20,35 @@ let source_term =
 let gnu_style_term =
   let open Cmdliner in
   let doc = "Use GNU style when applicable" in
-  Arg.(value & flag & info ~doc ["gnu"])
+  Arg.(value & flag & info ~doc [ "gnu" ])
 
 (** Set test flag. *)
 let test_flag_term =
   let open Cmdliner in
   let doc =
-    "Awaits for testing inputs on stdin and print interpreter \
-     outputs"
+    "Awaits for testing inputs on stdin and print interpreter outputs"
   in
-  Arg.(value & flag & info ~doc ["test"])
+  Arg.(value & flag & info ~doc [ "test" ])
 
 (** Set result point of view. *)
 let result_pov_term =
   let open Cmdliner in
   let doc =
-    "Specify for which partner the test results are tailored (defaults \
-     to canonical results)"
+    "Specify for which partner the test results are tailored (defaults to \
+     canonical results)"
   in
-  Arg.(value & opt (some string) None & info ~doc ["for"])
+  Arg.(value & opt (some string) None & info ~doc [ "for" ])
 
 (** Set result point of view. *)
 let all_pov_term =
   let open Cmdliner in
-  let doc =
-    "Show partners only results in their respective point of view"
-  in
-  Arg.(value & flag & info ~doc ["forall"])
+  let doc = "Show partners only results in their respective point of view" in
+  Arg.(value & flag & info ~doc [ "forall" ])
 
-(** The main compilation function. It simply calls the main compilation
-    pipepine with a parsing on file. *)
+(** The main compilation function. It simply calls the main compilation pipepine
+    with a parsing on file. *)
 let compile : string -> bool -> string option -> bool -> unit =
-  fun path test res_pov all_pov ->
+ fun path test res_pov all_pov ->
   let src_program = Grammar.ParserMain.parse_program path in
   let p, l = Compiler.Compile.compile src_program in
   (* let filter = Compiler.GenDot.{ *)
@@ -62,12 +59,11 @@ let compile : string -> bool -> string option -> bool -> unit =
   (* Compiler.GenDot.dot_of_program p filter; *)
   if test then Testing.test_stdin p l res_pov all_pov
 
-(** [a -+ b] composes the terms [a] and [b] but ignores the
-    [a] result. *)
+(** [a -+ b] composes the terms [a] and [b] but ignores the [a] result. *)
 let ( -+ ) : 'a Cmdliner.Term.t -> 'b Cmdliner.Term.t -> 'b Cmdliner.Term.t =
-  fun l r ->
-    let open Cmdliner.Term in
-    const (fun _ r -> r) $ l $ r
+ fun l r ->
+  let open Cmdliner.Term in
+  const (fun _ r -> r) $ l $ r
 
 (** Main entrypoint. *)
 let main () =
@@ -75,14 +71,14 @@ let main () =
   let doc = "Niagara compiler" in
   let name = Filename.basename Sys.executable_name in
   let info = Cmd.info ~doc name in
-  let cmd = Cmd.v info (Term.(
-      setup_log_term -+
-      gnu_style_term -+
-      ((const compile) $ source_term $ test_flag_term $ result_pov_term $ all_pov_term)
-      )
-  ) in
+  let cmd =
+    Cmd.v info
+      Term.(
+        setup_log_term -+ gnu_style_term
+        -+ (const compile $ source_term $ test_flag_term $ result_pov_term
+          $ all_pov_term))
+  in
   let code = Cmd.eval cmd in
   exit code
-
 
 let () = main ()

@@ -1,7 +1,4 @@
-type id_kind =
-  | Any
-  | Event
-  | Partner
+type id_kind = Any | Event | Partner
 
 type error = private
   | Internal of string
@@ -24,47 +21,39 @@ include module type of Logs with type 'a Tag.def = 'a Logs.Tag.def
 
 (** {1 Types & Tags} *)
 
+type info = private { pinfo : ProgramInfo.t; kind : error }
 (** Additional message informations. *)
-type info = private {
-  pinfo : ProgramInfo.t;
-  kind : error;
-}
 
+val infos_tag : info Tag.def
 (** Meta data tag for additionnal messages.loc
 
     {b Warning} They are stored in reverse order. *)
-val infos_tag : info Tag.def
 
 val raise_internal_error :
   ('a, Format.formatter, unit, unit, unit, 'b) format6 -> 'a
 
 val raise_parsing_error : ?loc:Pos.t -> string -> 'a
-
 val raise_repartition_error : ProgramInfo.t -> Variable.t -> R.t -> 'a
-
 val raise_multiple_def_rep_error : ProgramInfo.t -> Variable.t -> 'a
-
 val raise_missing_dest_error : unit -> 'a
-
 val raise_typing_error : ?loc:Pos.t -> unit -> 'a
-
 val raise_nonlinear_error : ?loc:Pos.t -> unit -> 'a
-
 val raise_unknown_id_error : ?loc:Pos.t -> string -> id_kind -> 'a
 
-val raise_useless_opposition_error : ?loc:Pos.t -> ProgramInfo.t -> Variable.t -> 'a
+val raise_useless_opposition_error :
+  ?loc:Pos.t -> ProgramInfo.t -> Variable.t -> 'a
 
-val raise_multiple_opp_provider_error : ?locs:Pos.t list -> ProgramInfo.t -> Variable.t -> 'a
+val raise_multiple_opp_provider_error :
+  ?locs:Pos.t list -> ProgramInfo.t -> Variable.t -> 'a
 
-(** Initializes logs. Reporter uses
-    standard output/error. For CLI use. *)
 val cli_reporting_init : unit -> unit
+(** Initializes logs. Reporter uses standard output/error. For CLI use. *)
 
 (** {1 Legacy} *)
 
 (** Legacy function to report errors.
 
-  @deprecated *)
+    @deprecated *)
 
 val raise_error :
   ?locs:Pos.t list -> ('a, Format.formatter, unit, unit, unit, 'b) format6 -> 'a

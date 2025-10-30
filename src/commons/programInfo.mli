@@ -2,7 +2,7 @@ type relevance_set = {
   endpoint : Variable.t;
   (* opposable variant of target *)
   relevant_vars : Variable.Set.t;
-  (* minimal set of variable needed to explain opposable computation *)
+      (* minimal set of variable needed to explain opposable computation *)
 }
 
 type t = {
@@ -16,10 +16,9 @@ type t = {
 }
 
 val dummy : t
-
 val print_variable : t -> Format.formatter -> Variable.t -> unit
 
-val print_ctx_variable : t -> Format.formatter -> Variable.t * Context.Group.t -> unit
+val print_ctx_variable :
+  t -> Format.formatter -> Variable.t * Context.Group.t -> unit
 
 val print_var_contexts : t -> Format.formatter -> unit -> unit
-

@@ -6,26 +6,23 @@ type t =
   | LDuration of Date.Duration.t
 
 let print_money_value fmt (m : Z.t) =
-  Format.fprintf fmt "%a.%02d"
-    Z.pp_print Z.(m / ~$100) Z.(to_int (m mod ~$100))
+  Format.fprintf fmt "%a.%02d" Z.pp_print Z.(m / ~$100) Z.(to_int (m mod ~$100))
 
 let print fmt (l : t) =
   match l with
   | LInteger i -> Z.pp_print fmt i
-  | LRational f ->  R.print_dec_approx fmt f
+  | LRational f -> R.print_dec_approx fmt f
   | LMoney i -> Format.fprintf fmt "%a$" print_money_value i
   | LDate d -> CalendarLib.Printer.Date.fprint "%Y/%m/%d" fmt d
   | LDuration d ->
-    let y,m,d = Date.Duration.ymd d in
-    Format.fprintf fmt "%d year, %d month, %d day" y m d
+      let y, m, d = Date.Duration.ymd d in
+      Format.fprintf fmt "%d year, %d month, %d day" y m d
 
 let is_zero (l : t) =
   match l with
-  | LInteger i
-  | LMoney i -> Z.(equal zero i)
+  | LInteger i | LMoney i -> Z.(equal zero i)
   | LRational r -> R.(equal zero r)
-  | LDate _
-  | LDuration _ -> assert false
+  | LDate _ | LDuration _ -> assert false
 
 let type_of (l : t) =
   match l with

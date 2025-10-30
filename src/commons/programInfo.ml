@@ -2,7 +2,7 @@ type relevance_set = {
   endpoint : Variable.t;
   (* final receiving partner *)
   relevant_vars : Variable.Set.t;
-  (* minimal set of variable needed to explain computation *)
+      (* minimal set of variable needed to explain computation *)
 }
 
 type t = {
@@ -15,31 +15,32 @@ type t = {
   dep_graph : Variable.Graph.t;
 }
 
-let dummy = {
-  var_info = Variable.Map.empty;
-  var_shapes = Variable.Map.empty;
-  contexts = Context.empty_world;
-  compounds = Variable.Map.empty;
-  constants = Variable.Map.empty;
-  relevance_sets = Variable.Map.empty;
-  dep_graph = Variable.Graph.empty;
-}
+let dummy =
+  {
+    var_info = Variable.Map.empty;
+    var_shapes = Variable.Map.empty;
+    contexts = Context.empty_world;
+    compounds = Variable.Map.empty;
+    constants = Variable.Map.empty;
+    relevance_sets = Variable.Map.empty;
+    dep_graph = Variable.Graph.empty;
+  }
 
 let print_variable infos fmt (v : Variable.t) =
   match VarInfo.get_name infos.var_info v with
-  | Some name ->
-    Format.fprintf fmt "%s/%d" name (Variable.uid v)
-  | None ->
-    VarInfo.print fmt (Variable.Map.find v infos.var_info)
+  | Some name -> Format.fprintf fmt "%s/%d" name (Variable.uid v)
+  | None -> VarInfo.print fmt (Variable.Map.find v infos.var_info)
 
 let print_ctx_variable infos fmt ((v, proj) : Variable.t * Context.Group.t) =
   Format.fprintf fmt "@[<hv 2>%a@,%a@]" (print_variable infos) v
-    (Context.print_projection infos.contexts) proj
+    (Context.print_projection infos.contexts)
+    proj
 
 let print_var_contexts infos fmt () =
-  Variable.Map.iter (fun v shape ->
-      Format.fprintf fmt "@[<hv 2>var %a@ %a@]@;"
-        (print_ctx_variable infos) (v, Context.any_projection (infos.contexts))
-        (Context.print_shape infos.contexts) shape
-    )
+  Variable.Map.iter
+    (fun v shape ->
+      Format.fprintf fmt "@[<hv 2>var %a@ %a@]@;" (print_ctx_variable infos)
+        (v, Context.any_projection infos.contexts)
+        (Context.print_shape infos.contexts)
+        shape)
     infos.var_shapes

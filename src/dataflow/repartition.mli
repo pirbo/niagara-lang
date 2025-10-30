@@ -1,8 +1,7 @@
-
 type opposed_part = {
   opp_value : R.t;
   opp_target : Variable.t;
-  opp_provider : Variable.t
+  opp_provider : Variable.t;
 }
 
 type opposable_part = R.t * opposed_part list
@@ -21,9 +20,7 @@ type 'a share = {
 }
 
 type 'a t = 'a share list
-
 type eqs = part_or_def t Variable.Map.t
-
 type unified_parts = Condition.t R.Map.t
 
 type fullness_result = {
@@ -33,8 +30,6 @@ type fullness_result = {
   deficits : unified_parts share option;
 }
 
-type err =
-  | ImperfectSum of R.t
-  | MultipleDefRep
+type err = ImperfectSum of R.t | MultipleDefRep
 
 val resolve_fullness : part_or_def t -> (fullness_result, err) Result.t

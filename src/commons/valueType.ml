@@ -1,7 +1,1 @@
-type t =
-  | TInteger
-  | TRational
-  | TMoney
-  | TEvent
-  | TDate
-  | TDuration
+type t = TInteger | TRational | TMoney | TEvent | TDate | TDuration

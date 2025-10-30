@@ -1,5 +1,4 @@
 open Surface
-
 open Dataflow
 
 let timing = false
@@ -7,12 +6,13 @@ let timing = false
 let time =
   let t = ref (Sys.time ()) in
   fun msg ->
-  let t' = Sys.time () in
-  if timing then Format.eprintf "%.3fs %s@." (t' -. !t) msg;
-  t := t'
+    let t' = Sys.time () in
+    if timing then Format.eprintf "%.3fs %s@." (t' -. !t) msg;
+    t := t'
 
 (** Compilation pipeline from a source AST. *)
-let compile : Ast.source Ast.program -> Equ.program * Equ.limits = fun program ->
+let compile : Ast.source Ast.program -> Equ.program * Equ.limits =
+ fun program ->
   (* let fmt = Format.formatter_of_out_channel stderr in *)
   time "compile start";
   let ctx_program = Contextualize.program program in
@@ -37,7 +37,10 @@ let compile : Ast.source Ast.program -> Equ.program * Equ.limits = fun program -
   (* Format.(fprintf (formatter_of_out_channel (open_out "graph.dot")) "%s" *)
   (*           (Dot.dot_string_of_program equ_res filter)); *)
   (* time "graph produced"; *)
-  let prog = Activation_propagation.compute equ_res.infos equ_res.aggr_eqs equ_res.event_eqs in
+  let prog =
+    Activation_propagation.compute equ_res.infos equ_res.aggr_eqs
+      equ_res.event_eqs
+  in
   (* FormatEqu.print_program fmt prog; *)
   (* List.iter (Format.fprintf fmt "%a@." (FormatEqu.print_var_with_info prog.infos)) *)
   (*   (Variable.Graph.topological_depth_ordering prog.infos.dep_graph); *)
@@ -45,4 +48,4 @@ let compile : Ast.source Ast.program -> Equ.program * Equ.limits = fun program -
   let limits = Limits.compute prog in
   (* FormatEqu.print_limits fmt limits; *)
   time "limits computed";
-  prog, limits
+  (prog, limits)

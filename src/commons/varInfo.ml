@@ -1,14 +1,10 @@
-
 type op_kind =
   | Quotepart of R.t
   | Bonus of Variable.Set.t
   | Default of Condition.t R.Map.t
   | Deficit of Condition.t R.Map.t
 
-type event_loc =
-  | NoEvent
-  | Before of Variable.t
-  | After of Variable.t
+type event_loc = NoEvent | Before of Variable.t | After of Variable.t
 
 type origin =
   | Named of string
@@ -23,7 +19,7 @@ type origin =
       op_kind : op_kind;
       condition : event_loc;
       source : Variable.t;
-      target : Variable.t
+      target : Variable.t;
     }
   | TriggerOperation of {
       source : Variable.t;
@@ -43,7 +39,11 @@ type origin =
   | StagedRepartition of { rep : Variable.t; stage : Condition.t }
   | PoolStage of Variable.t
   | ConditionExistential
-  | OpposingVariant of { target : Variable.t; origin : Variable.t; variant : origin }
+  | OpposingVariant of {
+      target : Variable.t;
+      origin : Variable.t;
+      variant : origin;
+    }
   | OppositionDelta of { target : Variable.t }
 
 type partner_role = Provider | Receiver
@@ -58,101 +58,84 @@ type kind =
   | Event
   | Constant
 
-type t = {
-  origin : origin;
-  typ : ValueType.t;
-  kind : kind;
-}
-
+type t = { origin : origin; typ : ValueType.t; kind : kind }
 type collection = t Variable.Map.t
 
 let is_input t =
   match t.kind with
-  | ParameterInput { shadow  = false }
-  | PoolInput { shadow  = false } -> true
+  | ParameterInput { shadow = false } | PoolInput { shadow = false } -> true
   | _ -> false
 
-let is_partner t =
-  match t.kind with
-  | Partner _ -> true
-  | _ -> false
-
-let is_provider t =
-  match t.kind with
-  | Partner Provider -> true
-  | _ -> false
-
+let is_partner t = match t.kind with Partner _ -> true | _ -> false
+let is_provider t = match t.kind with Partner Provider -> true | _ -> false
 let is_event t = t.kind = Event
 
 let is_original_partner t =
-  match t.kind, t.origin with
+  match (t.kind, t.origin) with
   | Partner Receiver, Named s -> Some s
   | _ -> None
 
 let rec get_name coll v =
   match Variable.Map.find_opt v coll with
   | None -> None
-  | Some t ->
-    match t.origin with
-    | Named name -> Some name
-    | LabelOfPartner { partner; _ } -> get_name coll partner
-    | Cumulative v -> get_name coll v
-    | AnonEvent -> None
-    | Peeking v -> get_name coll v
-    | RisingEvent v -> get_name coll v
-    | ContextSpecialized { origin; _ } -> get_name coll origin
-    | OperationDetail _ -> None
-    | TriggerOperation _ -> None
-    | LocalValuation _ -> None
-    | OperationSum _ -> None
-    | RepartitionSum _ -> None
-    | DeficitSum _ -> None
-    | StagedRepartition _ -> None
-    | PoolStage _ -> None
-    | ConditionExistential -> None
-    | OpposingVariant { origin; _ } -> get_name coll origin
-    | OppositionDelta _ -> None
+  | Some t -> (
+      match t.origin with
+      | Named name -> Some name
+      | LabelOfPartner { partner; _ } -> get_name coll partner
+      | Cumulative v -> get_name coll v
+      | AnonEvent -> None
+      | Peeking v -> get_name coll v
+      | RisingEvent v -> get_name coll v
+      | ContextSpecialized { origin; _ } -> get_name coll origin
+      | OperationDetail _ -> None
+      | TriggerOperation _ -> None
+      | LocalValuation _ -> None
+      | OperationSum _ -> None
+      | RepartitionSum _ -> None
+      | DeficitSum _ -> None
+      | StagedRepartition _ -> None
+      | PoolStage _ -> None
+      | ConditionExistential -> None
+      | OpposingVariant { origin; _ } -> get_name coll origin
+      | OppositionDelta _ -> None)
 
 let print fmt t =
   let open Format in
   match t.origin with
   | Named name -> pp_print_string fmt name
   | LabelOfPartner { partner; label } ->
-    fprintf fmt "%d$%s" (Variable.uid partner) label
-  | Cumulative v ->
-    fprintf fmt "#%d" (Variable.uid v)
+      fprintf fmt "%d$%s" (Variable.uid partner) label
+  | Cumulative v -> fprintf fmt "#%d" (Variable.uid v)
   | AnonEvent -> pp_print_string fmt "anon_event"
   | Peeking v -> fprintf fmt "@%d" (Variable.uid v)
   | RisingEvent v -> fprintf fmt "^%d" (Variable.uid v)
   | ContextSpecialized { origin; context } ->
-    fprintf fmt "%d(%a)" (Variable.uid origin) Context.Group.print context
+      fprintf fmt "%d(%a)" (Variable.uid origin) Context.Group.print context
   | OperationDetail { label = _; source; target; op_kind; condition = _ } ->
-    fprintf fmt "[%d->%d]%s" (Variable.uid source) (Variable.uid target)
-      (match op_kind with
-       | Quotepart _ -> "%"
-       | Bonus _ -> "$"
-       | Default _ -> "?"
-       | Deficit _ -> "!")
+      fprintf fmt "[%d->%d]%s" (Variable.uid source) (Variable.uid target)
+        (match op_kind with
+        | Quotepart _ -> "%"
+        | Bonus _ -> "$"
+        | Default _ -> "?"
+        | Deficit _ -> "!")
   | TriggerOperation { label = _; source; target; trigger; trigger_vars = _ } ->
-    fprintf fmt "[%d->%d]@@%d" (Variable.uid source) (Variable.uid target)
-      (Variable.uid trigger)
+      fprintf fmt "[%d->%d]@@%d" (Variable.uid source) (Variable.uid target)
+        (Variable.uid trigger)
   | LocalValuation { target; trigger; deps = _ } ->
-    fprintf fmt "[=%d]%a" (Variable.uid target)
-      (pp_print_option (fun fmt trigger ->
-           fprintf fmt"@@%d" (Variable.uid trigger)))
-      trigger
+      fprintf fmt "[=%d]%a" (Variable.uid target)
+        (pp_print_option (fun fmt trigger ->
+             fprintf fmt "@@%d" (Variable.uid trigger)))
+        trigger
   | OperationSum { source; target } ->
-    fprintf fmt "[%d->%d]*" (Variable.uid source) (Variable.uid target)
+      fprintf fmt "[%d->%d]*" (Variable.uid source) (Variable.uid target)
   | RepartitionSum v -> fprintf fmt "%d->*" (Variable.uid v)
   | DeficitSum v -> fprintf fmt "%d->!" (Variable.uid v)
   | StagedRepartition { rep; _ } -> fprintf fmt "~>%d" (Variable.uid rep)
   | PoolStage v -> fprintf fmt "~%d~" (Variable.uid v)
-  | ConditionExistential ->
-    fprintf fmt "`E"
+  | ConditionExistential -> fprintf fmt "`E"
   | OpposingVariant { target; origin; variant = _ } ->
-    fprintf fmt "%d<%d>" (Variable.uid origin) (Variable.uid target)
-  | OppositionDelta { target } ->
-    fprintf fmt "\u{0394}%d" (Variable.uid target)
+      fprintf fmt "%d<%d>" (Variable.uid origin) (Variable.uid target)
+  | OppositionDelta { target } -> fprintf fmt "\u{0394}%d" (Variable.uid target)
 
 let get_any_name coll v =
   match get_name coll v with
